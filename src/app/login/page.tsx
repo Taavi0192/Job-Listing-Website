@@ -25,9 +25,7 @@ const LoginPage = () => {
           router.push('/student/dashboard');
           break;
         case 'faculty':
-          console.log('abc')
           router.push('/faculty/dashboard');
-          router.refresh()
           break;
         case 'company':
           router.push('/company/dashboard');

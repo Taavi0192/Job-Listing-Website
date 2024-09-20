@@ -1,15 +1,24 @@
+'use client';
+import { signOut } from 'next-auth/react';
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../api/auth/[...nextauth]/route';
-
-export default async function AlumniDashboard() {
-  const session = await getServerSession(authOptions);
-
-  // Alumni-specific content
+export default function AlumniDashboard() {
   return (
-    <div>
+    <div style={{ padding: '20px', textAlign: 'center' }}>
       <h1>Alumni Dashboard</h1>
-      <p>Welcome to the Alumni Dashboard, {session.user.name}!</p>
+      <p>Welcome, Alumni Member!</p>
+      <button onClick={() => signOut()} style={buttonStyle}>
+        Logout
+      </button>
     </div>
   );
 }
+
+const buttonStyle = {
+  padding: '10px 20px',
+  backgroundColor: '#d9534f',
+  color: 'white',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  fontSize: '16px',
+};

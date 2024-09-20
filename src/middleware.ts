@@ -22,30 +22,30 @@ export async function middleware(req: NextRequest) {
   // Protect faculty routes
   if (pathname.startsWith('/faculty') && role !== 'faculty') {
     console.log('abcdef')
-    return NextResponse.redirect(new URL('/', req.url));
+    return NextResponse.redirect(new URL('/access-denied', req.url));
   }
 
   // Protect company routes
   if (pathname.startsWith('/company') && role !== 'company') {
-    return NextResponse.redirect(new URL('/auth/signin', req.url));
+    return NextResponse.redirect(new URL('/access-denied', req.url));
   }
 
   // Protect ilc routes
   if (pathname.startsWith('/ilc') && role !== 'ilc') {
-    return NextResponse.redirect(new URL('/auth/signin', req.url));
+    return NextResponse.redirect(new URL('/access-denied', req.url));
   }
 
   // Protect alumni routes
   if (pathname.startsWith('/alumni') && role !== 'alumni') {
-    return NextResponse.redirect(new URL('/auth/signin', req.url));
+    return NextResponse.redirect(new URL('/access-denied', req.url));
   }
 
   // Protect student routes
   if (pathname.startsWith('/student') && role !== 'student') {
-    return NextResponse.redirect(new URL('/auth/signin', req.url));
+    return NextResponse.redirect(new URL('/access-denied', req.url));
   }
 
-  // Add more role checks for other roles like alumni, ILC heads as needed
+  // Add more role checks for other roles as needed
 
   return NextResponse.next();
 }

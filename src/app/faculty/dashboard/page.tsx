@@ -1,27 +1,24 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { redirect } from 'next/navigation';
+'use client';
+import { signOut } from 'next-auth/react';
 
-export default async function FacultyDashboard() {
-  const session = await getServerSession(authOptions);
-
-  // Debugging: Ensure session is being recognized
-  console.log('Session on Faculty Dashboard:', session);
-
-  // If the user is not authenticated, redirect to login page
-  if (!session) {
-    redirect('/login');
-  }
-
-  // If the user is not a faculty member, redirect to home page or an error page
-  if (session.user.role !== 'faculty') {
-    redirect('/');
-  }
-
+export default function FacultyDashboard() {
   return (
-    <div>
+    <div style={{ padding: '20px', textAlign: 'center' }}>
       <h1>Faculty Dashboard</h1>
-      <p>Welcome, {session.user.name}!</p>
+      <p>Welcome, Faculty Member!</p>
+      <button onClick={() => signOut()} style={buttonStyle}>
+        Logout
+      </button>
     </div>
   );
 }
+
+const buttonStyle = {
+  padding: '10px 20px',
+  backgroundColor: '#d9534f',
+  color: 'white',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  fontSize: '16px',
+};

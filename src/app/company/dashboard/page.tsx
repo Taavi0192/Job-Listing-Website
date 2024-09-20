@@ -1,15 +1,24 @@
+'use client';
+import { signOut } from 'next-auth/react';
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../api/auth/[...nextauth]/route';
-
-export default async function CompanyDashboard() {
-  const session = await getServerSession(authOptions);
-
-  // Company-specific content
+export default function CompanyDashboard() {
   return (
-    <div>
+    <div style={{ padding: '20px', textAlign: 'center' }}>
       <h1>Company Dashboard</h1>
-      <p>Welcome to the Company Dashboard, {session.user.name}!</p>
+      <p>Welcome, Company Member!</p>
+      <button onClick={() => signOut()} style={buttonStyle}>
+        Logout
+      </button>
     </div>
   );
 }
+
+const buttonStyle = {
+  padding: '10px 20px',
+  backgroundColor: '#d9534f',
+  color: 'white',
+  border: 'none',
+  borderRadius: '5px',
+  cursor: 'pointer',
+  fontSize: '16px',
+};
