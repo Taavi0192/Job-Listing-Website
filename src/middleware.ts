@@ -5,8 +5,11 @@ import type { NextRequest } from 'next/server';
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
+  console.log('Token', token);
+
   // If there's no token (user is not authenticated), redirect to sign-in page
   if (!token) {
+    console.log('xyz')
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
@@ -14,9 +17,12 @@ export async function middleware(req: NextRequest) {
   const { role } = token;
   const pathname = req.nextUrl.pathname;
 
+  console.log('user role from token', role)
+
   // Protect faculty routes
   if (pathname.startsWith('/faculty') && role !== 'faculty') {
-    return NextResponse.redirect(new URL('/login', req.url));
+    console.log('abcdef')
+    return NextResponse.redirect(new URL('/', req.url));
   }
 
   // Protect company routes

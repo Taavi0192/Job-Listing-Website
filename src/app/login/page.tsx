@@ -11,6 +11,10 @@ const LoginPage = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  // Debugging: Log session status and session data
+  console.log('Session Status:', status);
+  console.log('Session Data:', session);
+
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.role) {
       const role = session?.user.role;
@@ -21,7 +25,9 @@ const LoginPage = () => {
           router.push('/student/dashboard');
           break;
         case 'faculty':
+          console.log('abc')
           router.push('/faculty/dashboard');
+          router.refresh()
           break;
         case 'company':
           router.push('/company/dashboard');
