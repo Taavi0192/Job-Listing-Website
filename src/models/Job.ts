@@ -1,6 +1,7 @@
 import { Schema, model, models } from 'mongoose';
 
 const JobSchema = new Schema({
+  _id?: ObjectId,
   title: { type: String, required: true },
   company: { type: String, required: true },
   category: { type: String, required: true }, // e.g., Internship, Part-time, Full-time

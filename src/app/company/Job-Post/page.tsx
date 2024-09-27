@@ -38,12 +38,6 @@ export default function PostJob() {
         />
         <input
           type="text"
-          placeholder="Company"
-          value={formData.company}
-          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-        />
-        <input
-          type="text"
           placeholder="Category"
           value={formData.category}
           onChange={(e) => setFormData({ ...formData, category: e.target.value })}

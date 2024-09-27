@@ -1,8 +1,10 @@
 'use client';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function JobListings() {
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [jobs, setJobs] = useState([]);
 
@@ -17,20 +19,40 @@ export default function JobListings() {
   }, []);
 
   const handleApply = (jobId: string) => {
-    // Redirect to the job details page
-    router.push(`/jobs/${jobId}`);
+    router.push(`/jobs/${jobId}`); // Redirect to job details page to apply
   };
+
+  const handleRecommend = (jobId: string) => {
+    // Logic to recommend a job to a student
+    router.push(`/faculty/recommend/${jobId}`); // Redirect to recommendation form
+  };
+
+  const handlePostJob = () => {
+    router.push('/company/Job-Post'); // Redirect to job posting form
+  };
+
+  const isStudentOrAlumni = session?.user.role === 'student' || session?.user.role === 'alumni';
+  const isCompany = session?.user.role === 'company';
+  const isFaculty = session?.user.role === 'faculty';
 
   return (
     <div>
       <h1>Job Listings</h1>
+
+      {/* Conditionally render the Post Job button for companies */}
+      {isCompany && <button onClick={handlePostJob}>Post New Job</button>}
+
       {jobs.map((job) => (
         <div key={job._id}>
           <h3>{job.title}</h3>
           <p>{job.company}</p>
           <p>{job.category}</p>
           <p>{job.location}</p>
-          <button onClick={() => handleApply(job._id)}>Apply</button>
+          
+          {/* Conditionally render different actions based on user role */}
+          {isStudentOrAlumni && <button onClick={() => handleApply(job._id)}>Apply Now</button>}
+          {isCompany && session.user.id === job.companyId && <p>This is your job posting</p>}
+          {isFaculty && <button onClick={() => handleRecommend(job._id)}>Recommend Job</button>}
         </div>
       ))}
     </div>

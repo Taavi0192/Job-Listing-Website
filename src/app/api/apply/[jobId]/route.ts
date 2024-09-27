@@ -24,7 +24,7 @@ export async function POST(req: Request, { params }: { params: { jobId: string }
 
     // Insert the application into the 'applications' collection
     const result = await db.collection('applications').insertOne({
-      jobId: new ObjectId(jobId),
+      jobId: jobId,
       applicantName,
       applicantEmail,
       resumeUrl,
