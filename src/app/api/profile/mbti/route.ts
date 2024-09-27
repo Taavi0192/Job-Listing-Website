@@ -20,3 +20,24 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ message: 'MBTI result saved successfully!' });
 }
+
+export async function GET(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  const client = await clientPromise;
+  const db = client.db();
+
+  // Fetch the user's profile based on their email
+  const user = await db.collection('users').findOne({ email: session.user.email });
+
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  // Return the mbti field from the user
+  return NextResponse.json({ mbti: user.mbti });
+}
