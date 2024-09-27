@@ -22,9 +22,9 @@ export async function POST(req: Request) {
 
     // Insert recommendation into the recommendations collection
     const recommendation = {
-      facultyId: session.user.id,
+      facultyId: new ObjectId(session.user.id),
       jobId: jobId,
-      studentId: studentId,
+      studentId: new ObjectId(studentId),
       reason,
       recommendedAt: new Date(),
     };

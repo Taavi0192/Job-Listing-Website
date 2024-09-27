@@ -31,6 +31,10 @@ export default function JobListings() {
     router.push('/company/Job-Post'); // Redirect to job posting form
   };
 
+  const handleViewRecommendations = (jobId: string) => {
+    router.push(`/recommendations/${jobId}`); // Redirect to recommendations page for this job
+  };
+
   const isStudentOrAlumni = session?.user.role === 'student' || session?.user.role === 'alumni';
   const isCompany = session?.user.role === 'company';
   const isFaculty = session?.user.role === 'faculty';
@@ -51,7 +55,11 @@ export default function JobListings() {
           
           {/* Conditionally render different actions based on user role */}
           {isStudentOrAlumni && <button onClick={() => handleApply(job._id)}>Apply Now</button>}
-          {isCompany && session.user.id === job.companyId && <p>This is your job posting</p>}
+          {isCompany && session.user.id === job.companyId && (
+            <button onClick={() => handleViewRecommendations(job._id)}>
+              View Recommendations
+            </button>
+          )}
           {isFaculty && <button onClick={() => handleRecommend(job._id)}>Recommend Job</button>}
         </div>
       ))}
