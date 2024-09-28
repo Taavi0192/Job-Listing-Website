@@ -11,6 +11,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
+    "formidable": "^3.5.1",
     "mongodb": "^6.9.0",
     "mongoose": "^8.6.3",
     "next": "14.2.13",

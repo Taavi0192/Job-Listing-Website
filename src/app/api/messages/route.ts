@@ -1,18 +1,39 @@
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { NextResponse } from "next/server";
+import clientPromise from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
+import { GridFSBucket } from "mongodb";
 
 export async function POST(req: Request) {
   try {
     const client = await clientPromise;
     const db = client.db();
-    const { content, senderId, recipientId, conversationId } = await req.json();
+    const formData = await req.formData();
+    const content = formData.get("content")?.toString() || "";
+    const senderId = formData.get("senderId")?.toString() || "";
+    const conversationId = formData.get("conversationId")?.toString() || "";
+    const file = formData.get("file") as File | null;
+
+    let fileId = null;
+
+    // If a file is attached, handle file upload using GridFS
+    if (file) {
+      const arrayBuffer = await file.arrayBuffer(); // Convert file to array buffer
+      const buffer = Buffer.from(arrayBuffer); // Convert array buffer to buffer
+
+      const bucket = new GridFSBucket(db, { bucketName: "uploads" });
+      const uploadStream = bucket.openUploadStream(file.name, {
+        metadata: { contentType: file.type }, // Store the file's MIME type in metadata
+      });
+      uploadStream.end(buffer);  // Upload the buffer to GridFS
+
+      fileId = uploadStream.id; // Store the GridFS file ID
+    }
 
     let convId = conversationId;
 
     // If no conversationId, create a new conversation
     if (!convId) {
-      const conversation = await db.collection('conversations').insertOne({
+      const conversation = await db.collection("conversations").insertOne({
         participants: [senderId, recipientId],
         createdAt: new Date(),
       });
@@ -20,20 +41,27 @@ export async function POST(req: Request) {
     }
 
     // Store the message
-    await db.collection('messages').insertOne({
+    await db.collection("messages").insertOne({
       conversationId: new ObjectId(convId),
       senderId,
       content,
+      fileId,
       createdAt: new Date(),
     });
 
     // Fetch all messages for the conversation
-    const messages = await db.collection('messages').find({ conversationId: convId }).toArray();
+    const messages = await db
+      .collection("messages")
+      .find({ conversationId: convId })
+      .toArray();
 
     return NextResponse.json({ messages, conversationId: convId });
   } catch (error) {
-    console.error('Error sending message:', error);
-    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
+    console.error("Error sending message:", error);
+    return NextResponse.json(
+      { error: "Failed to send message" },
+      { status: 500 }
+    );
   }
 }
 

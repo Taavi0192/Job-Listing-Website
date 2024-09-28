@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function Conversation({ params }: { params: { conversationId: string } }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -32,20 +33,31 @@ export default function Conversation({ params }: { params: { conversationId: str
   }, [params.conversationId]);
 
   const sendMessage = async () => {
+    const formData = new FormData();
+    formData.append('content', newMessage);
+    formData.append('senderId', session?.user?.id || '');
+    formData.append('conversationId', params.conversationId);
+    if (file) {
+      formData.append('file', file); // Append the selected file
+    }
+
     const res = await fetch(`/api/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content: newMessage,
-        senderId: session?.user?.id,
-        conversationId: params.conversationId,
-      }),
+      body: formData, // Send the form data, including the file
     });
 
     if (res.ok) {
-      const data = await res.json();
-      setMessages(data.messages);
-      setNewMessage('');
+      setNewMessage(''); // Clear the input field after sending the message
+      setFile(null); // Clear the file input
+      fetchMessages(); // Fetch messages again after sending
+    }
+  };
+
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
     }
   };
 
@@ -56,6 +68,12 @@ export default function Conversation({ params }: { params: { conversationId: str
         {messages.map((message, index) => (
           <div key={index} style={{ textAlign: message.senderId === session?.user?.id ? 'right' : 'left' }}>
             <p>{message.content}</p>
+            {message.fileId && (
+              <a href={`/api/files/${message.fileId}`} target="_blank" rel="noopener noreferrer">
+                View File
+              </a>
+            )}
+
           </div>
         ))}
       </div>
@@ -67,6 +85,7 @@ export default function Conversation({ params }: { params: { conversationId: str
           placeholder="Type your message..."
           style={{ flex: '1', padding: '10px' }}
         />
+        <input type="file" onChange={handleFileChange} style={{ padding: '10px' }} /> {/* File input */}
         <button onClick={sendMessage} style={{ padding: '10px' }}>Send</button>
       </div>
     </div>
