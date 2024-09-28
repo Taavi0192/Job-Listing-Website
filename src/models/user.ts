@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { Schema, model, models } from 'mongoose';
 
 interface User {
