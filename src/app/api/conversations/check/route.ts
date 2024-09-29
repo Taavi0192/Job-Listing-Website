@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
+import { ObjectId } from 'mongodb';
 
 export async function GET(req: Request) {
   try {
@@ -12,6 +13,10 @@ export async function GET(req: Request) {
 
     if (!session || !participantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!ObjectId.isValid(session.user.id) || !ObjectId.isValid(participantId)) {
+      return NextResponse.json({ error: 'Invalid user or participant ID' }, { status: 400 });
     }
 
     // Check if there's an existing conversation between the current user and the selected participant

@@ -1,106 +1,96 @@
-import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
-import { GridFSBucket } from "mongodb";
+import { NextResponse } from 'next/server';
+import clientPromise from '@/lib/mongodb';
+import { ObjectId, GridFSBucket } from 'mongodb';
 
 export async function POST(req: Request) {
   try {
     const client = await clientPromise;
     const db = client.db();
-    const formData = await req.formData();
-    const content = formData.get("content")?.toString() || "";
-    const senderId = formData.get("senderId")?.toString() || "";
-    const conversationId = formData.get("conversationId")?.toString() || "";
-    const scheduleDate = formData.get('scheduleDate')?.toString() || '';
-    const file = formData.get("file") as File | null;
+    const contentType = req.headers.get('content-type');
+
+    let content = '';
+    let senderId = '';
+    let recipientId = '';
+    let conversationId = '';
+    let scheduleDate = '';
+    let file: File | null = null;
+
+    // Handle form data (for file uploads)
+    if (contentType?.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      content = formData.get('content')?.toString() || '';
+      senderId = formData.get('senderId')?.toString() || '';
+      recipientId = formData.get('recipientId')?.toString() || '';
+      conversationId = formData.get('conversationId')?.toString() || '';
+      scheduleDate = formData.get('scheduleDate')?.toString() || '';
+      file = formData.get('file') as File | null;
+    } else {
+      // Handle JSON data (for regular message posting)
+      const { content: jsonContent, senderId: jsonSenderId, recipientId: jsonRecipientId, conversationId: jsonConversationId, scheduleDate: jsonScheduleDate } = await req.json();
+      content = jsonContent;
+      senderId = jsonSenderId;
+      recipientId = jsonRecipientId;
+      conversationId = jsonConversationId;
+      scheduleDate = jsonScheduleDate || '';
+    }
+
+    if (!ObjectId.isValid(senderId)) {
+      return NextResponse.json({ error: 'Invalid sender ID' }, { status: 400 });
+    }
+    
+    if (!conversationId && !ObjectId.isValid(recipientId)) {
+      return NextResponse.json({ error: 'Invalid recipient ID' }, { status: 400 });
+    }    
 
     let fileId = null;
 
-    // If a file is attached, handle file upload using GridFS
+    // Handle file upload if a file is provided
     if (file) {
-      const arrayBuffer = await file.arrayBuffer(); // Convert file to array buffer
-      const buffer = Buffer.from(arrayBuffer); // Convert array buffer to buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-      const bucket = new GridFSBucket(db, { bucketName: "uploads" });
+      const bucket = new GridFSBucket(db, { bucketName: 'uploads' });
       const uploadStream = bucket.openUploadStream(file.name, {
-        metadata: { contentType: file.type }, // Store the file's MIME type in metadata
+        metadata: { contentType: file.type },
       });
-      uploadStream.end(buffer);  // Upload the buffer to GridFS
+      uploadStream.end(buffer); // Upload the buffer to GridFS
 
-      fileId = uploadStream.id; // Store the GridFS file ID
+      fileId = uploadStream.id;
     }
 
     let convId = conversationId;
 
     // If no conversationId, create a new conversation
     if (!convId) {
-      const conversation = await db.collection("conversations").insertOne({
-        participants: [senderId, recipientId],
+      const conversation = await db.collection('conversations').insertOne({
+        participants: [senderId, recipientId], // Ensure participants array is added correctly
         createdAt: new Date(),
       });
       convId = conversation.insertedId;
     }
 
-    // Determine if the message is scheduled
     const isScheduled = !!scheduleDate;
 
     // Store the message
-    await db.collection("messages").insertOne({
+    await db.collection('messages').insertOne({
       conversationId: new ObjectId(convId),
-      senderId,
+      senderId: senderId,
       content,
       fileId,
-      scheduleDate: isScheduled ? new Date(scheduleDate) : null, // Save the schedule date if present
+      scheduleDate: isScheduled ? new Date(scheduleDate) : null,
       createdAt: new Date(),
-      sent: !isScheduled, // If no schedule date, mark as sent; otherwise, mark as not sent
+      sent: !isScheduled,
     });
 
-    // // Fetch all messages for the conversation
-    // const messages = await db
-    //   .collection("messages")
-    //   .find({ conversationId: convId })
-    //   .toArray();
-
-    // return NextResponse.json({ messages, conversationId: convId });
-
-    // Only return the message if it is NOT scheduled
+    // Return the appropriate response
     if (!isScheduled) {
-      const messages = await db.collection('messages').find({ conversationId: new ObjectId(conversationId) }).toArray();
+      const messages = await db.collection('messages').find({ conversationId: new ObjectId(conversationId), sent: true }).toArray();
       return NextResponse.json({ messages });
     } else {
-      // For scheduled messages, return a success response without sending the message
       return NextResponse.json({ message: 'Message scheduled successfully' });
     }
-
   } catch (error) {
-    console.error("Error sending message:", error);
-    return NextResponse.json(
-      { error: "Failed to send message" },
-      { status: 500 }
-    );
+    console.error('Error sending message:', error);
+    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
   }
 }
-
-// // GET: Retrieving messages for a conversation
-// export async function GET(req: Request) {
-//   try {
-//     const client = await clientPromise;
-//     const db = client.db();
-//     const url = new URL(req.url);
-//     const conversationId = url.searchParams.get('conversationId');
-
-//     if (!conversationId) {
-//       return NextResponse.json({ error: 'Conversation ID is required' }, { status: 400 });
-//     }
-
-//     // Fetch all messages for the specific conversation
-//     const messages = await db.collection('messages').find({
-//       conversationId: new ObjectId(conversationId),
-//     }).toArray();
-
-//     return NextResponse.json(messages);
-//   } catch (error) {
-//     console.error('Failed to fetch messages:', error);
-//     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
-//   }
-// }
