@@ -28,7 +28,12 @@ export default function JobListings() {
   };
 
   const handlePostJob = () => {
-    router.push('/company/Job-Post'); // Redirect to job posting form
+    if (isCompany){
+      router.push('/company/Job-Post'); // Redirect to job posting form
+    }
+    if (isAlumni){
+      router.push('/alumni/jobs'); // Redirect to job posting form
+    }
   };
 
   const handleViewRecommendations = (jobId: string) => {
@@ -38,6 +43,7 @@ export default function JobListings() {
   const isStudentOrAlumni = session?.user.role === 'student' || session?.user.role === 'alumni';
   const isCompany = session?.user.role === 'company';
   const isFaculty = session?.user.role === 'faculty';
+  const isAlumni = session?.user.role === 'alumni';
 
   return (
     <div>
@@ -45,6 +51,9 @@ export default function JobListings() {
 
       {/* Conditionally render the Post Job button for companies */}
       {isCompany && <button onClick={handlePostJob}>Post New Job</button>}
+
+      {/* Conditionally render the Post Job button for companies */}
+      {isAlumni && <button onClick={handlePostJob}>Post New Job</button>}
 
       {jobs.map((job) => (
         <div key={job._id}>
