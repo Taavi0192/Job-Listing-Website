@@ -40,6 +40,10 @@ export default function JobListings() {
     router.push(`/recommendations/${jobId}`); // Redirect to recommendations page for this job
   };
 
+  const handleViewApplications = (jobId: string) => {
+    router.push(`/company/job-applications/${jobId}`); // Redirect to recommendations page for this job
+  };
+
   const isStudentOrAlumni = session?.user.role === 'student' || session?.user.role === 'alumni';
   const isCompany = session?.user.role === 'company';
   const isFaculty = session?.user.role === 'faculty';
@@ -67,6 +71,11 @@ export default function JobListings() {
           {isCompany && session.user.id === job.companyId && (
             <button onClick={() => handleViewRecommendations(job._id)}>
               View Recommendations
+            </button>
+          )}
+          {isCompany && session.user.id === job.companyId && (
+            <button onClick={() => handleViewApplications(job._id)}>
+              View Applications
             </button>
           )}
           {isFaculty && <button onClick={() => handleRecommend(job._id)}>Recommend Job</button>}
