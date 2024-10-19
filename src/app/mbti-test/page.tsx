@@ -1,83 +1,64 @@
-'use client';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+"use client"
 
-export default function MbtiTestPage() {
-  const [mbtiResult, setMbtiResult] = useState('');
-  const router = useRouter();
+import Link from "next/link";
+import { Heading, Text, Highlight, Flex, Button } from "@chakra-ui/react";
+import { FiArrowRight } from "react-icons/fi";
 
-  const handleSaveResult = async () => {
-    // Call the API to save the result to the database
-    const res = await fetch('/api/profile/mbti', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ mbtiResult }),
-    });
+import MainLayout from "@/components/layouts/main-layout";
 
-    if (res.ok) {
-      alert('MBTI result saved successfully!');
-      router.push('/profile'); // Redirect back to the profile page
-    } else {
-      alert('Failed to save MBTI result.');
-    }
-  };
-
+export default function HomePage() {
   return (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <h1>Take the MBTI Test</h1>
-
-      {/* Instructions to take the MBTI test on 16Personalities */}
-      <p>
-        Click the button below to take the MBTI test on 16Personalities. After
-        completing the test, come back and enter your result manually.
-      </p>
-      <button
-        onClick={() => window.open('https://www.16personalities.com/free-personality-test', '_blank')}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: '#0070f3',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          fontSize: '16px',
-          marginTop: '20px',
-        }}
-      >
-        Take MBTI Test on 16Personalities
-      </button>
-
-      {/* Input for manually entering the MBTI result */}
-      <div style={{ marginTop: '20px' }}>
-        <h3>Enter Your MBTI Result:</h3>
-        <input
-          type="text"
-          value={mbtiResult}
-          onChange={(e) => setMbtiResult(e.target.value)}
-          placeholder="e.g., INTJ"
-          style={{
-            padding: '10px',
-            width: '200px',
-            borderRadius: '5px',
-            marginRight: '10px',
+    <>
+      <MainLayout>
+        <Flex
+          w={{
+            base: "full",
+            lg: "50%",
           }}
-        />
-        <button
-          onClick={handleSaveResult}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
+          alignSelf="center"
+          px={4}
+          gap={8}
+          minH="full"
+          direction="column"
+          justifyContent="center"
+          alignItems="center"
         >
-          Save Result
-        </button>
-      </div>
-    </div>
+          <Heading
+            as="h1"
+            lineHeight="tall"
+            textAlign="center"
+          >
+            <Highlight
+              query="MBTI Personality Test"
+              styles={{
+                py: 1,
+                px: 4,
+                rounded: "full",
+                bg: "primary.500",
+                color: "white",
+              }}
+            >
+              Welcome to MBTI Personality Test
+            </Highlight>
+          </Heading>
+          <Text
+            fontSize="xl"
+            align="center"
+          >
+            Learn to know yourself better with this personality test.
+          </Text>
+          <Link href="mbti-test/test">
+            <Button
+              w="min-content"
+              colorScheme="primary"
+              variant="outline"
+              rightIcon={<FiArrowRight size={20} />}
+            >
+              Take Test
+            </Button>
+          </Link>
+        </Flex>
+      </MainLayout>
+    </>
   );
 }
