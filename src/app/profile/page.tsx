@@ -5,21 +5,23 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function Profile() {
-  const { data: session, status } = useSession(); // Use status to determine loading state
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [mbtiResult, setMbtiResult] = useState("");
   const [successStory, setSuccessStory] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [isAlumni, setIsAlumni] = useState(false); // Check if user is an alumni
+  const [isAlumni, setIsAlumni] = useState(false); 
+  const [isStudent, setIsStudent] = useState(false); // Check if user is a student
+  const [mentor, setMentor] = useState(null); // Mentor state for students
+  const [supervisor, setSupervisor] = useState(null); // Supervisor state for students
 
+  // Fetch MBTI result and check if user is authenticated
   useEffect(() => {
-    // Redirect to login if the user is unauthenticated
     if (status === "unauthenticated") {
       router.push("/login");
     }
 
     if (status === "authenticated") {
-      // Fetch the saved MBTI result (mocked here, replace with API call)
       const fetchMbtiResult = async () => {
         try {
           const res = await fetch("/api/profile/mbti");
@@ -34,10 +36,10 @@ export default function Profile() {
     }
   }, [status, router]);
 
+  // Fetch alumni success story if the user is an alumni
   useEffect(() => {
     if (session?.user?.role === "alumni") {
-      setIsAlumni(true); // Mark user as alumni
-      // Fetch current success story from the API (if any)
+      setIsAlumni(true);
       const fetchSuccessStory = async () => {
         const res = await fetch("/api/alumni/success-story");
         const data = await res.json();
@@ -45,6 +47,38 @@ export default function Profile() {
       };
 
       fetchSuccessStory();
+    }
+  }, [session]);
+
+  // Fetch mentor and supervisor information if the user is a student
+  useEffect(() => {
+    if (session?.user?.role === "student") {
+      setIsStudent(true);
+
+      // Fetch mentor (alumni) information
+      const fetchMentor = async () => {
+        try {
+          const res = await fetch(`/api/students/mentor`);
+          const data = await res.json();
+          setMentor(data.mentor || null);
+        } catch (error) {
+          console.error("Error fetching mentor:", error);
+        }
+      };
+
+      // Fetch supervisor (faculty) information
+      const fetchSupervisor = async () => {
+        try {
+          const res = await fetch(`/api/supervisor/${session?.user?.id}`);
+          const data = await res.json();
+          setSupervisor(data.supervisor || null);
+        } catch (error) {
+          console.error("Error fetching supervisor:", error);
+        }
+      };
+
+      fetchMentor();
+      fetchSupervisor();
     }
   }, [session]);
 
@@ -58,7 +92,7 @@ export default function Profile() {
 
     if (res.ok) {
       alert("Success story updated!");
-      setIsEditing(false); // Stop editing mode after success
+      setIsEditing(false);
     } else {
       alert("Error updating success story.");
     }
@@ -68,7 +102,6 @@ export default function Profile() {
     return <p>Loading...</p>;
   }
 
-  // Only render the profile when authenticated
   return (
     <div>
       <h1>Profile</h1>
@@ -79,7 +112,6 @@ export default function Profile() {
           <p>Role: {session.user.role}</p>
 
           <h3>Your MBTI Type: {mbtiResult}</h3>
-
           <button
             onClick={() => router.push("/mbti-test")}
             style={{
@@ -96,6 +128,7 @@ export default function Profile() {
             Take MBTI Test
           </button>
 
+          {/* Alumni-specific section */}
           {isAlumni && (
             <div>
               <h3>Success Story</h3>
@@ -112,7 +145,7 @@ export default function Profile() {
                   <button type="submit">Update Success Story</button>
                   <button
                     type="button"
-                    onClick={() => setIsEditing(false)} // Cancel editing
+                    onClick={() => setIsEditing(false)}
                     style={{ marginLeft: "10px" }}
                   >
                     Cancel
@@ -125,6 +158,35 @@ export default function Profile() {
                     Edit Success Story
                   </button>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Student-specific section */}
+          {isStudent && (
+            <div>
+              {/* Mentor Information */}
+              <h3>Mentor Information</h3>
+              {mentor ? (
+                <div>
+                  <p><strong>Name:</strong> {mentor.name}</p>
+                  <p><strong>Email:</strong> {mentor.email}</p>
+                  <p><strong>Approved At:</strong> {new Date(mentor.approvedAt).toLocaleString()}</p>
+                </div>
+              ) : (
+                <p>No mentor selected yet.</p>
+              )}
+
+              {/* Supervisor Information */}
+              <h3>Supervisor Information</h3>
+              {supervisor ? (
+                <div>
+                  <p><strong>Faculty Name:</strong> {supervisor.facultyName}</p>
+                  <p><strong>Faculty Email:</strong> {supervisor.facultyEmail}</p>
+                  <p><strong>Assigned At:</strong> {new Date(supervisor.assignedAt).toLocaleString()}</p>
+                </div>
+              ) : (
+                <p>No supervisor assigned yet.</p>
               )}
             </div>
           )}
